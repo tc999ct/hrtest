@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TODO アプリ</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', 'Hiragino Sans', sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+    .container {
+      width: 100%;
+      max-width: 560px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 30px;
+      color: #e94560;
+    }
+    /* 追加フォーム */
+    .add-form {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .add-form input[type="text"] {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background: #16213e;
+      color: #eee;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .add-form input[type="text"]:focus {
+      border-color: #e94560;
+    }
+    .add-form button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #e94560;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .add-form button:hover { background: #c73652; }
+
+    /* タスクリスト */
+    .task-list {
+      list-style: none;
+    }
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      background: #16213e;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .task-item:hover { background: #1a2744; }
+    .task-item.done { opacity: 0.5; }
+    .task-item.done .task-desc {
+      text-decoration: line-through;
+    }
+
+    .task-desc {
+      flex: 1;
+      font-size: 1rem;
+    }
+
+    /* チェックボタン */
+    .btn-toggle {
+      width: 28px; height: 28px;
+      border: 2px solid #555;
+      border-radius: 50%;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #0fbcf9;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .btn-toggle:hover { border-color: #0fbcf9; }
+    .task-item.done .btn-toggle {
+      background: #0fbcf9;
+      border-color: #0fbcf9;
+      color: #1a1a2e;
+    }
+
+    /* 削除ボタン */
+    .btn-delete {
+      border: none;
+      background: transparent;
+      color: #555;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>TODO アプリ</h1>
+
+  <!-- 追加フォーム -->
+  <form class="add-form" id="addForm">
+    <input type="text" id="taskInput" placeholder="やることを入力...">
+    <button type="submit">追加</button>
+  </form>
+
+  <!-- タスクリスト -->
+  <ul class="task-list" id="taskList"></ul>
+</div>
+
+<script>
+  // DOM要素
+  const form = document.getElementById('addForm');
+  const input = document.getElementById('taskInput');
+  const list = document.getElementById('taskList');
+
+  // タスクの状態を保持（実際はサーバーと通信すべきですが、ここではローカルストレージを使用）
+  let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+
+  // タスクをレンダリング
+  function renderTasks() {
+    list.innerHTML = '';
+    tasks.forEach((task, index) => {
+      const li = document.createElement('li');
+      li.className = `task-item${task.done ? ' done' : ''}`;
+      li.innerHTML = `
+        <button class="btn-toggle" aria-label="完了/未完了 toggles">${task.done ? '✓' : ''}</button>
+        <span class="task-desc">${task.description}</span>
+        <button class="btn-delete" aria-label="削除">×</button>
+      `;
+      // 完了切替
+      li.querySelector('.btn-toggle').addEventListener('click', () => {
+        task.done = !task.done;
+        saveAndRender();
+      });
+      // 削除
+      li.querySelector('.btn-delete').addEventListener('click', () => {
+        tasks.splice(index, 1);
+        saveAndRender();
+      });
+      list.appendChild(li);
+    });
+  }
+
+  // 保存とレンダリング
+  function saveAndRender() {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    renderTasks();
+  }
+
+  // 追加フォーム送信
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (text) {
+      tasks.push({ id: Date.now(), description: text, done: false });
+      input.value = '';
+      saveAndRender();
+    }
+  });
+
+  // 初期レンダリング
+  renderTasks();
+</script>
+</body>
+</html>

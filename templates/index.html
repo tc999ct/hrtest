@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TODO アプリ</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', 'Hiragino Sans', sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+    .container {
+      width: 100%;
+      max-width: 560px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 30px;
+      color: #e94560;
+    }
+    /* 追加フォーム */
+    .add-form {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .add-form input[type="text"] {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background: #16213e;
+      color: #eee;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .add-form input[type="text"]:focus {
+      border-color: #e94560;
+    }
+    .add-form button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #e94560;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .add-form button:hover { background: #c73652; }
+
+    /* タスクリスト */
+    .task-list {
+      list-style: none;
+    }
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      background: #16213e;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .task-item:hover { background: #1a2744; }
+    .task-item.done { opacity: 0.5; }
+    .task-item.done .task-desc {
+      text-decoration: line-through;
+    }
+
+    .task-desc {
+      flex: 1;
+      font-size: 1rem;
+    }
+
+    /* チェックボタン */
+    .btn-toggle {
+      width: 28px; height: 28px;
+      border: 2px solid #555;
+      border-radius: 50%;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #0fbcf9;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .btn-toggle:hover { border-color: #0fbcf9; }
+    .task-item.done .btn-toggle {
+      background: #0fbcf9;
+      border-color: #0fbcf9;
+      color: #1a1a2e;
+    }
+
+    /* 削除ボタン */
+    .btn-delete {
+      border: none;
+      background: transparent;
+      color: #555;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: color 0.2s, background 0.2s;
+      flex-shrink: 0;
+    }
+    .btn-delete:hover { color: #e94560; background: rgba(233,69,96,0.1); }
+
+    .empty {
+      text-align: center;
+      color: #555;
+      padding: 40px;
+      font-size: 1.1rem;
+    }
+
+    /* カウンター */
+    .counter {
+      text-align: center;
+      margin-top: 20px;
+      color: #555;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📝 TODO</h1>
+
+    <form class="add-form" action="/add" method="POST">
+      <input type="text" name="description" placeholder="新しいタスクを入力..." autofocus autocomplete="off">
+      <button type="submit">追加</button>
+    </form>
+
+    {% if tasks %}
+    <ul class="task-list">
+      {% for task in tasks %}
+      <li class="task-item {{ 'done' if task.done }}">
+        <form action="/toggle/{{ task.id }}" method="POST" style="display:inline">
+          <button type="submit" class="btn-toggle">{{ '✓' if task.done else '' }}</button>
+        </form>
+        <span class="task-desc">{{ task.description }}</span>
+        <form action="/delete/{{ task.id }}" method="POST" style="display:inline">
+          <button type="submit" class="btn-delete" title="削除">✕</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    <div class="counter">
+      {{ tasks | selectattr('done', 'false') | list | length }} 件残り / 全 {{ tasks | length }} 件
+    </div>
+    {% else %}
+    <div class="empty">タスクはありません 🎉</div>
+    {% endif %}
+  </div>
+</body>
+</html>
