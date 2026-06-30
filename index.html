@@ -8,8 +8,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', 'Hiragino Sans', sans-serif;
-      background: #1a1a2e;
-      color: #eee;
+      color: #222;
       min-height: 100vh;
       display: flex;
       justify-content: center;
@@ -34,10 +33,10 @@
     .add-form input[type="text"] {
       flex: 1;
       padding: 12px 16px;
-      border: 2px solid #333;
+      border: 2px solid #ccc;
       border-radius: 8px;
-      background: #16213e;
-      color: #eee;
+      background: #fff;
+      color: #222;
       font-size: 1rem;
       outline: none;
       transition: border-color 0.2s;
@@ -57,7 +56,6 @@
       transition: background 0.2s;
     }
     .add-form button:hover { background: #c73652; }
-
     /* タスクリスト */
     .task-list {
       list-style: none;
@@ -68,21 +66,20 @@
       gap: 12px;
       padding: 14px 16px;
       margin-bottom: 8px;
-      background: #16213e;
+      background: #fff;
+      border: 1px solid #ddd;
       border-radius: 8px;
       transition: background 0.2s;
     }
-    .task-item:hover { background: #1a2744; }
+    .task-item:hover { background: #f0f0f0; }
     .task-item.done { opacity: 0.5; }
     .task-item.done .task-desc {
       text-decoration: line-through;
     }
-
     .task-desc {
       flex: 1;
       font-size: 1rem;
     }
-
     /* チェックボタン */
     .btn-toggle {
       width: 28px; height: 28px;
@@ -104,7 +101,6 @@
       border-color: #0fbcf9;
       color: #1a1a2e;
     }
-
     /* 削除ボタン */
     .btn-delete {
       border: none;
@@ -113,76 +109,54 @@
       font-size: 1.2rem;
       cursor: pointer;
       padding: 4px 8px;
+      border-radius: 4px;
+      transition: color 0.2s, background 0.2s;
+      flex-shrink: 0;
+    }
+    .btn-delete:hover { color: #e94560; background: rgba(233,69,96,0.1); }
+    .empty {
+      text-align: center;
+      color: #555;
+      padding: 40px;
+      font-size: 1.1rem;
+    }
+    /* カウンター */
+    .counter {
+      text-align: center;
+      margin-top: 20px;
+      color: #555;
+      font-size: 0.9rem;
     }
   </style>
 </head>
 <body>
-<div class="container">
-  <h1>TODO アプリ</h1>
-
-  <!-- 追加フォーム -->
-  <form class="add-form" id="addForm">
-    <input type="text" id="taskInput" placeholder="やることを入力...">
-    <button type="submit">追加</button>
-  </form>
-
-  <!-- タスクリスト -->
-  <ul class="task-list" id="taskList"></ul>
-</div>
-
-<script>
-  // DOM要素
-  const form = document.getElementById('addForm');
-  const input = document.getElementById('taskInput');
-  const list = document.getElementById('taskList');
-
-  // タスクの状態を保持（実際はサーバーと通信すべきですが、ここではローカルストレージを使用）
-  let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-
-  // タスクをレンダリング
-  function renderTasks() {
-    list.innerHTML = '';
-    tasks.forEach((task, index) => {
-      const li = document.createElement('li');
-      li.className = `task-item${task.done ? ' done' : ''}`;
-      li.innerHTML = `
-        <button class="btn-toggle" aria-label="完了/未完了 toggles">${task.done ? '✓' : ''}</button>
-        <span class="task-desc">${task.description}</span>
-        <button class="btn-delete" aria-label="削除">×</button>
-      `;
-      // 完了切替
-      li.querySelector('.btn-toggle').addEventListener('click', () => {
-        task.done = !task.done;
-        saveAndRender();
-      });
-      // 削除
-      li.querySelector('.btn-delete').addEventListener('click', () => {
-        tasks.splice(index, 1);
-        saveAndRender();
-      });
-      list.appendChild(li);
-    });
-  }
-
-  // 保存とレンダリング
-  function saveAndRender() {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-    renderTasks();
-  }
-
-  // 追加フォーム送信
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    const text = input.value.trim();
-    if (text) {
-      tasks.push({ id: Date.now(), description: text, done: false });
-      input.value = '';
-      saveAndRender();
-    }
-  });
-
-  // 初期レンダリング
-  renderTasks();
-</script>
+  <div class="container">
+    <h1>📝 TODO</h1>
+    <p style="text-align:center; color:#666; font-size:0.9rem;">最終更新: 2025-06-30 12:34</p>
+    <form class="add-form" action="/add" method="POST">
+      <input type="text" name="description" placeholder="新しいタスクを入力..." autofocus autocomplete="off">
+      <button type="submit">追加</button>
+    </form>
+    {% if tasks %}
+    <ul class="task-list">
+      {% for task in tasks %}
+      <li class="task-item {{ 'done' if task.done }}">
+        <form action="/toggle/{{ task.id }}" method="POST" style="display:inline">
+          <button type="submit" class="btn-toggle">{{ '✓' if task.done else '' }}</button>
+        </form>
+        <span class="task-desc">{{ task.description }}</span>
+        <form action="/delete/{{ task.id }}" method="POST" style="display:inline">
+          <button type="submit" class="btn-delete" title="削除">✕</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    <div class="counter">
+      {{ tasks | selectattr('done', 'false') | list | length }} 件残り / 全 {{ tasks | length }} 件
+    </div>
+    {% else %}
+    <div class="empty">タスクはありません 🎉</div>
+    {% endif %}
+  </div>
 </body>
 </html>
